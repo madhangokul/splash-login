@@ -4,6 +4,7 @@ import SplashCursor from './SplashCursor'
 export default function App() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const obstacle = { width: 380, height: 360 }
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -23,7 +24,7 @@ export default function App() {
     >
       {/* Background */}
       <div style={{ position: 'fixed', inset: 0, zIndex: 0 }}>
-        <SplashCursor />
+        <SplashCursor obstacle={obstacle} />
       </div>
 
       {/* Centered login */}

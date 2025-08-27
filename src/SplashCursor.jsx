@@ -15,7 +15,8 @@ function SplashCursor({
   SHADING = true,
   COLOR_UPDATE_SPEED = 10,
   BACK_COLOR = { r: 0.5, g: 0, b: 0 },
-  TRANSPARENT = true
+  TRANSPARENT = true,
+  obstacle = { width: 0, height: 0 }
 }) {
   const canvasRef = useRef(null);
 
@@ -571,6 +572,32 @@ function SplashCursor({
     const gradienSubtractProgram = new Program(baseVertexShader, gradientSubtractShader);
     const displayMaterial = new Material(baseVertexShader, displayShaderSource);
 
+    function applyObstacle() {
+      if (!obstacle || !obstacle.width || !obstacle.height) return;
+      const scale = window.devicePixelRatio || 1;
+      const w = Math.floor(obstacle.width * scale);
+      const h = Math.floor(obstacle.height * scale);
+      const x = Math.floor(canvas.width / 2 - w / 2);
+      const y = Math.floor(canvas.height / 2 - h / 2);
+
+      gl.enable(gl.SCISSOR_TEST);
+      gl.scissor(x, y, w, h);
+
+      clearProgram.bind();
+      gl.uniform1i(clearProgram.uniforms.uTexture, velocity.read.attach(0));
+      gl.uniform1f(clearProgram.uniforms.value, 0);
+      blit(velocity.write);
+      velocity.swap();
+
+      gl.scissor(x, y, w, h);
+      gl.uniform1i(clearProgram.uniforms.uTexture, dye.read.attach(0));
+      gl.uniform1f(clearProgram.uniforms.value, 0);
+      blit(dye.write);
+      dye.swap();
+
+      gl.disable(gl.SCISSOR_TEST);
+    }
+
     function initFramebuffers() {
       let simRes = getResolution(config.SIM_RESOLUTION);
       let dyeRes = getResolution(config.DYE_RESOLUTION);
@@ -758,6 +785,7 @@ function SplashCursor({
       updateColors(dt);
       applyInputs();
       step(dt);
+      applyObstacle();
       render(null);
       requestAnimationFrame(updateFrame);
     }
